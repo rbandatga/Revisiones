@@ -25,6 +25,13 @@ class Boletin_pdf extends CI_Controller {
         $this->valentinausuarios->user($session);
     }
     public function index(){
+		$secret_key = '6LfNplIUAAAAAOjKYJzFevvwRS8q4sqEWBBHnG1F';
+        $captcha    = $this->input->post('g-recaptcha-response');
+        $response   = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=".$secret_key."&response=".$captcha."&remoteip=".$_SERVER['REMOTE_ADDR']);
+        $obj = json_decode($response);
+        if($obj->success == false){
+            exit;
+        }
     	if(base_url() == 'https://gleads.tgapps.net/'){
 			$boletin_db = new mysqli('tga-reportes.cusc3ayieifn.us-west-1.rds.amazonaws.com','glead_view','=NFHB9hV','reportes');
 			if (mysqli_connect_errno()) {$this->doError(1313);exit();}
@@ -32,6 +39,7 @@ class Boletin_pdf extends CI_Controller {
 			$boletin_db = new mysqli('tga-reportes.cusc3ayieifn.us-west-1.rds.amazonaws.com','glead_view_dev','uBx2v&Uw','reportes');
 			if (mysqli_connect_errno()) {$this->doError(1313);exit();}
 		}
+		mysqli_set_charset($boletin_db, 'utf8');
 
 		#############################
 		####Variable de librerías####
@@ -61,13 +69,15 @@ class Boletin_pdf extends CI_Controller {
 		$img_logon			= site_url() . "images/sitio/reporte_pro/boletin/pdf/logon_trans.png";
 		$img_bullet_1		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (1).png";
 		$img_bullet_2		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (2).png";
-		//$img_bullet_3		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (3).png";
+		$img_bullet_3		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (3).png";
 		$img_bullet_4		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (4).png";
 		$img_bullet_5		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (5).png";
 		$img_bullet_6		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (6).png";
 		$img_bullet_7		= site_url() . "images/sitio/reporte_pro/boletin/pdf/bullets/bullet_ (7).png";
 		$img_cot_barra		= site_url() . "images/sitio/reporte_pro/boletin/pdf/cot_barra.gif";
 		$img_cat_barra		= site_url() . "images/sitio/reporte_pro/boletin/pdf/cat_barra.gif";
+		$img_fecha_anio		= site_url() . "images/sitio/reporte_pro/boletin/pdf/a";
+		$img_fecha_mes		= site_url() . "images/sitio/reporte_pro/boletin/pdf/m";
 
 		###############
 		####queries####
@@ -88,9 +98,9 @@ class Boletin_pdf extends CI_Controller {
 										 , a.catOrigenVenta
 									  FROM boletin_resumen_0 a
 									 WHERE a.idInmobiliaria = $ID_INMOBILIARIA
-									   AND a.idZona = $idZona
-									   AND a.fechaMes = $fechaMes
-									   AND a.fechaAnio = $fechaAnio;
+									   AND a.idZona 		= $idZona
+									   AND a.fechaMes 		= $fechaMes
+									   AND a.fechaAnio 		= $fechaAnio;
 										");
 		//PAG 2
 		//Fuente de tráfico por PORTAL
@@ -102,7 +112,8 @@ class Boletin_pdf extends CI_Controller {
 									 WHERE a.idInmobiliaria = $ID_INMOBILIARIA
 									   AND a.idZona 		= $idZona
 									   AND a.fechaMes 		= $fechaMes
-									   AND a.fechaAnio 		= $fechaAnio;
+									   AND a.fechaAnio 		= $fechaAnio
+								  ORDER BY a.cotWebPortal DESC, a.cotWebPortalUnico DESC;
 										");
 		//Fuente de tráfico por CONSULTA
 		$res1_con = $boletin_db->query("
@@ -113,7 +124,8 @@ class Boletin_pdf extends CI_Controller {
 										 WHERE a.idInmobiliaria = $ID_INMOBILIARIA
 										   AND a.idZona 		= $idZona
 										   AND a.fechaMes 		= $fechaMes
-										   AND a.fechaAnio 		= $fechaAnio;
+										   AND a.fechaAnio 		= $fechaAnio
+									  ORDER BY a.conPortal DESC, a.conPortalUnico DESC;
 											");
 		//PAG 3
 		//Resumen de cotizaciones
@@ -124,7 +136,7 @@ class Boletin_pdf extends CI_Controller {
 									   AND a.idZona 		= $idZona
 									   AND a.fechaMes 		= $fechaMes
 									   AND a.fechaAnio 		= $fechaAnio
-								  ORDER BY a.proyecto;
+								  ORDER BY a.proyecto ASC, a.portal ASC;
 										");
 
 		//PAG 4
@@ -236,7 +248,7 @@ class Boletin_pdf extends CI_Controller {
 		<table width="100%" style="border-bottom: 1px solid #ededed; color: #636262;">
 			<tr style="vertical-align: middle;">
 				<td width="80%" style="background-color: #c1212b;  vertical-align: middle;"><img width="117px" src="' . $img_logon. '" /></td>
-				<td width="20%" style="background-color: #c1212b;  text-align: center; color: white; font-size: 9pt;"> <div style="padding-top: 2px;position: absolute;">' . $fecha . '</div></td>
+				<td width="20%" style="background-color: #c1212b;"><table><tr><td><img width="60px" src="' . $img_fecha_mes . $fechaMes . '.png" /></td><td><img width="60px" src="' . $img_fecha_anio . $fechaAnio . '.png" /></td></tr></table></td>
 			</tr>
 			<tr>
 				<td width="60%">
@@ -357,7 +369,7 @@ class Boletin_pdf extends CI_Controller {
 							</tr>
 							<tr>
 								<td class="st2" align="right" style="font-size: 12pt;"><br />Personas categorizadas<br /></td>
-								<td class="st2  st5" align="center" style="font-size: 20pt; font-weight:bold;">' . $totalCat .'</td>
+								<td class="st2  st5" align="center" style="font-size: 20pt; font-weight:bold;">' . $totalCatUnico .'</td>
 								<td class="st2  st3" align="center" style="font-size: 20pt; font-weight:bold;">' . $totalCatUnico .'</td>
 							</tr>
 						</tbody>
@@ -404,6 +416,7 @@ class Boletin_pdf extends CI_Controller {
 		#####################################################################################################
 		#################################### Página 2/5######################################################
 		#####################################################################################################
+		if($res1->num_rows > 0){
 		//info pagina >
 		$pdf->AddPage();
 		$htmlpdf = "";
@@ -441,9 +454,8 @@ class Boletin_pdf extends CI_Controller {
 
 		$porTotUn = array();
 		if($res1->num_rows > 0){
-			
 			while($row1 = $res1->fetch_assoc()) {
-				$portal		  	   = utf8_decode(($row1['portal']=="")?"Sin portal":$row1['portal']);
+				$portal		  	   = ($row1['portal']=="")?"Sin portal":$row1['portal'];
 				$cotWebPortal	   = ($row1['cotWebPortal']=="")?0:$row1['cotWebPortal'];
 				$cotWebPortalUnico = ($row1['cotWebPortalUnico']=="")?0:$row1['cotWebPortalUnico'];
 				array_push($porTotUn, array($portal,$cotWebPortal,$cotWebPortalUnico));
@@ -480,7 +492,7 @@ class Boletin_pdf extends CI_Controller {
 
 		$PorTotCon = array();
 		while($row1 = $res1_con->fetch_assoc()) {
-			$portal		  	= utf8_decode(($row1['portal']=="")?"Sin portal":$row1['portal']);
+			$portal		  	= ($row1['portal']=="")?"Sin portal":$row1['portal'];
 			$conPortal	    = ($row1['conPortal']=="")?0:$row1['conPortal'];
 			$conPortalUnico = ($row1['conPortalUnico']=="")?0:$row1['conPortalUnico'];
 			array_push($PorTotCon, array($portal,$conPortal,$conPortalUnico));
@@ -505,10 +517,13 @@ class Boletin_pdf extends CI_Controller {
 		$pdf->writeHTML($htmlpdfFinal, true, false, true, false, '');
 
 
-
+		}
 		######################################################################################################
 		#################################### Página 3/5 ######################################################
 		######################################################################################################
+		if($res2->num_rows > 0){
+
+
 		//info pagina >
 		$pdf->AddPage();
 		$htmlpdf = "";
@@ -552,47 +567,103 @@ class Boletin_pdf extends CI_Controller {
 				$arrCotResumen[$idProyecto][$idPortal] 		= "$cotResumen";
 				$arrCotResumenUnico[$idProyecto][$idPortal] = "$cotResumenUnico";
 		    }
-
 		}
 
-		$anchMax 			= 10; //Cantidad de portales por tabla a mostrar
-		$paginacion			= count($arrIdPortales) / $anchMax;
+		$anchMax 			= 9; //Cantidad de portales por tabla a mostrar
+		$vMax 				= 18;
+		$paginacion			= count($arrIdPortales) / $anchMax; //Cantidad de tablas que van a haber en total
 		$pagactual			= 1; //No mover. No puede quedarse en 0
+		$vActual			= 1;
+		$p 					= 0;
+		$soloDos			= 0;
 
 		for ($a=$paginacion; $a > 0; $a--) {
+			$soloDos = 0;
+			//Imprime   Tabla completa
 			$htmlpdf .= '&nbsp;<br/><table style="font-size: 8pt;" cellpadding="1" width="900px" align="center">';
-				$htmlpdf .= '<tr>';
-				$htmlpdf .= '<td width="70px" ></td>';
-				for ($i=0; $i < count($arrIdPortales); $i++) { 
-					$htmlpdf .= '<td colspan="2" width="48px" style="border-bottom:0.5px solid #d2d4d3; font-size: 8pt;">' . utf8_decode($arrNomPortales[$i]) . '</td>';
+			$htmlpdf .= '<tr>';
+			$htmlpdf .= '<td width="120px" ></td>';
+			for ($i=0; $i < count($arrIdPortales); $i++) {
+				//Imprime     portal_1 | portal_2 | portal_3 | portal_4
+				if ($i < $anchMax && isset($arrNomPortales[$i + $p])) { //Para que no se pase más allá del ancho máximo
+					$htmlpdf .= '<td colspan="2" width="50px" style="border-bottom:0.5px solid #d2d4d3; font-size: 7pt;">' . $arrNomPortales[$i + $p] . '</td>';
 				}
-				$htmlpdf .= '</tr>';
-
-				$htmlpdf .= '<tr>';
-				$htmlpdf .= '<td width="70px" ></td>';
-				for ($i=0; $i < count($arrIdPortales); $i++) { 
-						$htmlpdf .= '<td width="24px" height="12px" style="line-height:12px; border-left:1.7px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt;">Total</td>';
-						$htmlpdf .= '<td width="24px" height="12px" style="line-height:12px; border-left:0.5px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt; color:#636363;">Únicos</td>';
-				}
-				$htmlpdf .= '</tr>';
-
 				
-				for ($i=0; $i < count($arrIdProyectos); $i++) { 
-					$idProyectoFind = $arrIdProyectos[$i];
-					if($i % 2){$colorR ='#edeeed;';}else{$colorR = 'white;';}
-					$htmlpdf .= '<tr style="background-color:'.$colorR.'">';
-					$htmlpdf .= '<td width="70px" >' . utf8_decode($arrNomProyectos[$i]) . '</td>';
-					for ($u=0; $u < count($arrIdPortales); $u++) { 
-						$idPortalFind = $arrIdPortales[$u];
-						$valorCotR  = ( empty($arrCotResumen[$idProyectoFind][$idPortalFind]) )?0:$arrCotResumen[$idProyectoFind][$idPortalFind];
-						$valorCotRU = ( empty($arrCotResumenUnico[$idProyectoFind][$idPortalFind]) )?0:$arrCotResumenUnico[$idProyectoFind][$idPortalFind];
-						$htmlpdf .= '<td width="24px" height="24px" style="border-left:1.5px solid #d2d4d3; color: black;">' . $valorCotR . '</td>';
-						$htmlpdf .= '<td width="24px" height="24px" style="border-left:0.5px solid #d2d4d3; color: black;">' . $valorCotRU . '</td>';
+			}
+			$htmlpdf .= '</tr>';
+			$htmlpdf .= '<tr>';
+			$htmlpdf .= '<td width="120px" ></td>';
+			for ($i=0; $i < count($arrIdPortales); $i++) {
+				//Imprimir    color || únicos
+				if ($i < $anchMax && isset($arrNomPortales[$i + $p])) { //Para que no se pase más allá del ancho máximo
+					$htmlpdf .= '<td width="25px" height="12px" style="line-height:12px; border-left:1.7px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt;">Total</td>';
+					$htmlpdf .= '<td width="25px" height="12px" style="line-height:12px; border-left:0.5px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt; color:#636363;">Únicos</td>';
+				}
+				
+			}
+			$htmlpdf .= '</tr>';
+
+			
+			for ($v=0; $v < count($arrIdProyectos); $v++) {
+				//Imprime      <tr> ----> (Nombre proyecto 99 88 99 88 99 88 99 88 99 88 99)
+				if ($vActual > $vMax) {
+					//REPITE LA GENERACIÓN DE LA TABLA PADRE CON SUS HEADERS -----------------------------------
+					$htmlpdf .= "</table>";
+						//Aquí valida si es la segunda tabla que pasa. Esto provoca un salto de línea.
+						$soloDos = 0;
+						$htmlpdfFinal = $cssPdf . $htmlpdf;
+						$pdf->writeHTML($htmlpdfFinal, true, false, true, false, '');
+						$pdf->AddPage();
+						$htmlpdf = "";
+						$soloDos = 1;
+					//Imprime   Tabla completa
+					$htmlpdf .= '<table style="font-size: 8pt;" cellpadding="1" width="900px" align="center">';
+					$htmlpdf .= '<tr>';
+					$htmlpdf .= '<td width="120px" ></td>';
+					for ($i=0; $i < count($arrIdPortales); $i++) {
+						//Imprime     portal_1 | portal_2 | portal_3 | portal_4
+						if ($i < $anchMax && isset($arrNomPortales[$i + $p])) { //Para que no se pase más allá del ancho máximo
+							$htmlpdf .= '<td colspan="2" width="50px" style="border-bottom:0.5px solid #d2d4d3; font-size: 7pt;">' . $arrNomPortales[$i + $p] . '</td>';
+						}
+						
 					}
 					$htmlpdf .= '</tr>';
+					$htmlpdf .= '<tr>';
+					$htmlpdf .= '<td width="120px" ></td>';
+					for ($i=0; $i < count($arrIdPortales); $i++) {
+						//Imprimir    color || únicos
+						if ($i < $anchMax && isset($arrNomPortales[$i + $p])) { //Para que no se pase más allá del ancho máximo
+							$htmlpdf .= '<td width="25px" height="12px" style="line-height:12px; border-left:1.7px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt;">Total</td>';
+							$htmlpdf .= '<td width="25px" height="12px" style="line-height:12px; border-left:0.5px solid #d2d4d3; border-bottom:1px solid #d2d4d3; font-size:7pt; color:#636363;">Únicos</td>';
+						}
+						
+					}
+
+					//FIN REPITE -------------------------------------------------------------------------------
+					$htmlpdf .= '</tr>';
+
+					$vActual = 1;
 				}
-				
+				$idProyectoFind = $arrIdProyectos[$v];
+				if(!($v % 2)){$colorR ='#edeeed;';}else{$colorR = 'white;';}
+				$htmlpdf .= '<tr style="background-color:'.$colorR.'">';
+				$htmlpdf .= '<td width="120px" style="font-size:6pt;">' . $arrNomProyectos[$v] . '</td>'; //Nombreproyecto
+				for ($u=0; $u < count($arrIdPortales); $u++) {
+					//Imprime      tot99 || un88
+					if ($u < $anchMax && isset($arrIdPortales[$u + $p])) { //Para que no se pase más allá del ancho máximo
+						$idPortalFind = $arrIdPortales[$u + $p];
+						$valorCotR  = ( empty($arrCotResumen[$idProyectoFind][$idPortalFind]) )?0:$arrCotResumen[$idProyectoFind][$idPortalFind];
+						$valorCotRU = ( empty($arrCotResumenUnico[$idProyectoFind][$idPortalFind]) )?0:$arrCotResumenUnico[$idProyectoFind][$idPortalFind];
+						$htmlpdf .= '<td width="25px" height="25px" style="border-left:1.5px solid #d2d4d3; color: black;">&nbsp;<br />' . $valorCotR . '</td>';
+						$htmlpdf .= '<td width="25px" height="25px" style="border-left:0.5px solid #d2d4d3; color: black;">&nbsp;<br />' . $valorCotRU . '</td>';
+					}
+				}
+				$vActual++;
+				$htmlpdf .= '</tr>';
+			}
+			
 			$htmlpdf .= '</table>';
+			$p = ($pagactual * $anchMax); //Este será nuestro número que va a ir sumando luego de las tablas anteriores
 			$pagactual++;
 		}
 
@@ -668,10 +739,11 @@ class Boletin_pdf extends CI_Controller {
 		$htmlpdfFinal = $cssPdf . $htmlpdf;
 		$pdf->writeHTML($htmlpdfFinal, true, false, true, false, '');
 
-
+		}
 		######################################################################################################
 		#################################### Página 4/5 ######################################################
 		######################################################################################################
+		if($res3->num_rows > 0){ //Imprime la página siempre y cuando hayan datos
 		//info pagina >
 		$pdf->AddPage();
 		$htmlpdf = "";
@@ -693,7 +765,7 @@ class Boletin_pdf extends CI_Controller {
 		$vueltasTab2 = $vueltasMaximas * 2;		// |         |  |  datos  |
 		$vuelta 	 = $vueltasTab2;
 
-		if($res3->num_rows > 0){
+		
 			while($row3 = $res3->fetch_assoc()) {
 				if ($vuelta == $vueltasTab1) {
 					//Cierro tab_1, agrego espacio en blanco bigTable y abro tab_2
@@ -706,7 +778,7 @@ class Boletin_pdf extends CI_Controller {
 
 					$vuelta = $vueltasTab2;
 				}
-				$ejecutivo		   = utf8_decode(trim(($row3['ejecutivo']=="")?"<i>Sin ejecutivo</i>":$row3['ejecutivo']));
+				$ejecutivo		   = trim(($row3['ejecutivo']=="")?"<i>Sin ejecutivo</i>":$row3['ejecutivo']);
 				$catEjecutivoPanel = trim(($row3['catEjecutivoPanel']=="")?"0":$row3['catEjecutivoPanel']);
 				$catEjecutivoFicha = trim(($row3['catEjecutivoFicha']=="")?"0":$row3['catEjecutivoFicha']); 
 				$htmlpdf.='<tr>';
@@ -715,7 +787,7 @@ class Boletin_pdf extends CI_Controller {
 
 				$vuelta --;
 		    }
-		}
+		
 
 		$htmlpdf .= "</table></td></tr></table>";
 		
@@ -725,10 +797,11 @@ class Boletin_pdf extends CI_Controller {
 		//echo $htmlpdfFinal; exit(); #BORRAR
 		$pdf->writeHTML($htmlpdfFinal, true, false, true, false, '');
 		
-
+		}
 		######################################################################################################
 		#################################### Página 5/5 ######################################################
 		######################################################################################################
+		if($res4->num_rows > 0){
 		//info pagina >
 		$pdf->AddPage();
 		$htmlpdf = "";
@@ -736,16 +809,16 @@ class Boletin_pdf extends CI_Controller {
 
 
 
-		$htmlpdf .= '<div class="subTitulo st4"><img class="bulletes" src="' . $img_bullet_7 . '" /> Resumen de gestiones</div><br />';
+		$htmlpdf .= '<div class="subTitulo st4"><img class="bulletes" src="' . $img_bullet_3 . '" /> Resumen de gestiones</div><br />';
 
 		$htmlpdf .= '<table width="100%" align="center"  style="font-size: 10pt;" cellpadding="3">';
 
 		$htmlpdf .= '<thead><tr>';
-		$htmlpdf .= '<td width="28%">&nbsp;</td>';
-		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt;">Cantidad de gestiones</td>';
-		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt;">Cantidad de personas</td>';
-		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt;">Ratio seguimiento</td>';
-		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt;">Días de primer contacto</td>';
+		$htmlpdf .= '<td width="28%"             style=" border-bottom: 0.8px solid #d2d4d3;">&nbsp;</td>';
+		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt; border-bottom: 0.8px solid #d2d4d3;">Cantidad de gestiones</td>';
+		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt; border-bottom: 0.8px solid #d2d4d3;">Cantidad de personas</td>';
+		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt; border-bottom: 0.8px solid #d2d4d3;">Ratio seguimiento</td>';
+		$htmlpdf .= '<td width="18%" colspan="2" style="font-size:7pt; border-bottom: 0.8px solid #d2d4d3;">Días de primer contacto</td>';
 		$htmlpdf .= '</tr></thead>';
 
 		$htmlpdf .= '<tbody>';
@@ -770,10 +843,11 @@ class Boletin_pdf extends CI_Controller {
 		$catGesTotal 	  = 0;
 		$catRatioTotal 	  = 0;
 		$catDiasTotal 	  = 0;
-
+		$cantCatDias 	  = 0;
+		$cantCotDias 	  = 0;
 		$colorPar = 1;
 		while($row4 = $res4->fetch_assoc()) {
-			$ejecutivo 	 = utf8_decode(($row4['ejecutivo']=="")?"<i>No encontrado</i>":$row4['ejecutivo']);
+			$ejecutivo 	 = ($row4['ejecutivo']=="")?"<i>No encontrado</i>":$row4['ejecutivo'];
 			$cotGesUnico = ($row4['cotGesUnico']=="")?0:$row4['cotGesUnico'];
 			$cotGes 	 = ($row4['cotGes']=="")?0:$row4['cotGes'];
 			$cotRatio 	 = ($row4['cotRatio']=="")?0:$row4['cotRatio'];
@@ -782,6 +856,9 @@ class Boletin_pdf extends CI_Controller {
 			$catGes 	 = ($row4['catGes']=="")?0:$row4['catGes'];
 			$catRatio 	 = ($row4['catRatio']=="")?0:$row4['catRatio'];
 			$catDias 	 = ($row4['catDias']=="")?0:$row4['catDias'];
+
+			if($catDias!=0){$cantCatDias++;}
+			if($cotDias!=0){$cantCotDias++;}
 
 			$cotGesUnicoTotal += $cotGesUnico;
 			$cotGesTotal 	  += $cotGes;
@@ -792,31 +869,37 @@ class Boletin_pdf extends CI_Controller {
 			$catRatioTotal 	  += $catRatio;
 			$catDiasTotal 	  += $catDias;
 
+
 			if($colorPar % 2){	$clasex = '#edeeed'; }else{	$clasex = 'white';	}
 			$htmlpdf .= '<tr style="background-color: '. $clasex .';">';
 			$htmlpdf .= '<td width="28%" height="13px" style="font-size: 8pt;">'. $ejecutivo .'</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotGesUnico . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $cotGes . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotRatio . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $cotDias . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $catGesUnico . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catGes . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $catRatio . '</td>';
-			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catDias . '</td>';
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotGes . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catGes . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotGesUnico . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catGesUnico . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotRatio . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catRatio . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1.8px solid #d2d4d3; font-size: 7pt;">' . $cotDias . '</td>'; # Se cambio de posición estaba mal
+			$htmlpdf .= '<td width="9%" height="13px" style="border-left:1px   solid #d2d4d3; font-size: 7pt;">' . $catDias . '</td>'; # Se cambio de posición estaba mal
 			$htmlpdf .= "</tr>";
 			$colorPar++;
 		}
 
+		$cotRatioTotal = ($cotGesUnicoTotal>0)?round(($cotGesTotal/$cotGesUnicoTotal),1):0;
+		$catRatioTotal = ($catGesUnicoTotal>0)?round(($catGesTotal/$catGesUnicoTotal),1):0;
+		$cotDiasTotal  = ($cantCotDias>0)?round(($cotDiasTotal/$cantCotDias),1):0;
+		$catDiasTotal  = ($cantCatDias>0)?round(($catDiasTotal/$cantCatDias),1):0;
+
 		$htmlpdf .= '<tr style="background-color: #d2eae1; color: #444444;" cellpadding="4">';
 		$htmlpdf .= '<td>Total</td>';
-		$htmlpdf .= '<td>' . $cotGesUnicoTotal . '</td>';
-		$htmlpdf .= '<td>' . $cotGesTotal . '</td>';
-		$htmlpdf .= '<td>' . $cotRatioTotal . '</td>';
-		$htmlpdf .= '<td>' . $cotDiasTotal . '</td>';
-		$htmlpdf .= '<td>' . $catGesUnicoTotal . '</td>';
-		$htmlpdf .= '<td>' . $catGesTotal . '</td>';
-		$htmlpdf .= '<td>' . $catRatioTotal . '</td>';
-		$htmlpdf .= '<td>' . $catDiasTotal . '</td>';
+		$htmlpdf .= '<td>' . $cotGesTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $catGesTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $cotGesUnicoTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $catGesUnicoTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $cotRatioTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $catRatioTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $cotDiasTotal . '</td>'; # Se cambio de posición estaba mal
+		$htmlpdf .= '<td>' . $catDiasTotal . '</td>'; # Se cambio de posición estaba mal
 		$htmlpdf .= '</tr>';
 
 		$htmlpdf .= '</tbody></table>';
@@ -830,7 +913,7 @@ class Boletin_pdf extends CI_Controller {
 		//Se imprime
 		$htmlpdfFinal = $cssPdf . $htmlpdf;
 		$pdf->writeHTML($htmlpdfFinal, true, false, true, false, '');
-
+		}
 		################################################################################
 		#################################### CIERRE ####################################
 		################################################################################
@@ -844,6 +927,7 @@ class Boletin_pdf extends CI_Controller {
 		unlink($GubicacionFinalLocal);
 
 		mysqli_close($boletin_db);
+		
     }
 
     public function doError($nro){
@@ -861,5 +945,6 @@ class Boletin_pdf extends CI_Controller {
     	}
     	echo "<div style='background-color: #c42727; color: white; padding: 15px; border: 1px solid black; font-family: roboto, arial;'><h3>Error#" .  $nro . " - " . $head . "</h3>" . "<div>" . $body . "<br /></div>" . "<div style='background-color: white !IMPORTANT; border: 1px solid gray; color: black; padding: 8px;;'>"  . $foot . "</div></div>";
     }
+
 }
 ?>

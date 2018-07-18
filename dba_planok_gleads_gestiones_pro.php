@@ -1,6 +1,6 @@
 <?php
 echo $nomArchivo = "dba_planok_gleads_gestiones_pro";
-$puente = new mysqli('216.70.88.35','portga','kXn@t775','puertotga',3306); #produccion
+$puente 	= new mysqli('216.70.88.35','portga','kXn@t775','puertotga',3306);
 $res_gleads = new mysqli('54.176.79.99','tga_crond','T_i466pyl8','res_gleads',3306);
 $to 		= "agonzalez@tga.cl;mrincon@tga.cl";
 $subject 	= "Notificacion: $nomArchivo";
@@ -15,6 +15,7 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 		FROM conexiones
 		WHERE estadoGesPro = 1
 		AND traspasoGesPro = 0
+		AND fechaGesPro > '0000-00-00'
 		ORDER BY idInmobiliaria ASC
 		LIMIT 1;
 	");
@@ -28,7 +29,7 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 	$clave = $fila_con['clave'];
 	$bdd = $fila_con['bdd'];
 	$fechaGesPro = $fila_con['fechaGesPro'];	 
-	
+	#echo '<br>idInmobiliaria: '.$idInmobiliaria; #comentar
 	$puente->query("UPDATE conexiones SET traspasoGesPro = 1 WHERE  idInmobiliaria = '$idInmobiliaria' AND id ='$id' LIMIT 1;");
 	$consulta_estado = $puente->query("SELECT COUNT(*) AS total FROM conexiones WHERE estadoGesPro = 1 AND traspasoGesPro = 0;");
 	$estado = mysqli_fetch_array($consulta_estado);
@@ -44,13 +45,14 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 	$fila_ultimoId  = mysqli_fetch_array($consulta_ultimoId);
 	$ultimoIdGestion = $fila_ultimoId['ultimo'];
 	if($ultimoIdGestion == ''){ $ultimoIdGestion = 0;}	
+	#echo '<br>ultimoIdGestion: '.$ultimoIdGestion; #comentar
 	
 	$gestion 	= utf8_decode('Gestión');
 	$asignacion = utf8_decode('Asignación');
 	$gesCat 	= utf8_decode('Gestión de un Categorizado');
 	$gesCot 	= utf8_decode('Gestión de un Cotizante');
 	
-	if($ultimoIdGestion >=0 && $idInmobiliaria >0){
+	if($ultimoIdGestion >=0 && $idInmobiliaria >0 && $fechaGesPro !=''){
 		$consulta_gestion_pro = $res_gleads->query("
 			SELECT 
 				  a.idGestionPro AS 'idGestion'
@@ -94,8 +96,8 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 				AND a.idProyecto >0
 				AND a.idUser >0
 				AND a.fecha >='$fechaGesPro'
-				AND a.tipo IN (1,2) -- 1Cat/2Cot 
-				AND a.idSV NOT IN (1001,1002) -- NoPlanok
+				AND a.tipo IN (1,2)
+				AND a.idSV NOT IN (1001,1002)
 				AND a.prueba = 0
 				AND a.descarte = 0
 				AND a.cancelada = 0
@@ -105,8 +107,9 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 				AND e.opcion !=''
 			GROUP BY a.idGestionPro
 			ORDER BY a.idGestionPro asc 
-			LIMIT 30;
-		");		
+			LIMIT 20;
+		");	
+		
 		$resultado = $consulta_gestion_pro->num_rows;
 		$total_procesados = 0;
 		if($resultado >0){ 
@@ -133,10 +136,12 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 					
 				$n++;
 				echo "<br>------------------------------------------------------- ".$n;
+				#echo "<br>IdGestion: ".$idGestion; #comentar
+				
 				$consulta_existe = $conexion->query("SELECT idGestion FROM gleads_gestiones WHERE idGestion = '$idGestion' LIMIT 1;");
 				$fila_existe = mysqli_fetch_array($consulta_existe);
 				if($fila_existe['idGestion'] >0){
-					echo '<br>1.-La gestion existe';						
+					echo '<br>1.- La gestion existe';						
 				}else{
 					$consulta_duplicado = $conexion->query("
 						SELECT idGestion FROM gleads_gestiones 
@@ -162,7 +167,7 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 					");
 					$fila_duplicado = mysqli_fetch_array($consulta_duplicado);
 					if($fila_duplicado['idGestion'] >0){
-						echo '<br>1.-La gestion_pro esta duplicada';							
+						echo '<br>1.- La gestion_pro esta duplicada';							
 					}else{						
 						$inserta_gestion = $conexion->query("
 							INSERT INTO gleads_gestiones(
@@ -182,22 +187,22 @@ if($puente->connect_errno || $res_gleads->connect_errno){
 							$txt = "Error al insertar la gestion_pro -IDI: $idInmobiliaria -IDG: $idGestion";
 							mail($to,$subject,$txt,$headers);
 						}else{
-							echo '<br>1.-Inserta gestion_pro';
+							echo '<br>1.- Inserta gestion_pro';
 							$total_procesados++;
 						}
 					}
 				}				
 			}#w	
 		}else{
-			echo '<br>1.-No existen nuevas gestiones_pro';
+			echo '<br>1.- No existen nuevas gestiones_pro';
 		}#r		
 	}else{
-		echo '<br>1.-Sin valor en campo ultimoIdGestion o idInmobiliaria';
+		echo '<br>1.- Sin valor en campo ultimoIdGestion o idInmobiliaria';
 	}
 	mysqli_close($puente);
 	mysqli_close($res_gleads);
 	echo "<br><br>Total procesados: $total_procesados";
-	$idCron = 196;
+	$idCron = 196; 
 	$total = $total_procesados; 
 	include('/var/www/php/crones/monitor/pro/web/monitor_cron.php');
 }

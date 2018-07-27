@@ -90,9 +90,6 @@ if($puente->connect_errno){
 	$n =0;
 	if($resultado >0){		
 		while($fila = mysqli_fetch_array($consulta_cotizaciones)){ 
-			$limpia      	= array("'",'-');
-			$campo_base     = 'prueba';
-			$campo_final    = trim(str_replace($limpia,'',$campo_base));
 			
 			$idInmobiliaria = trim($fila['idInmobiliariaTGA']);
 			$idPais 		= trim($fila['idPais']);

@@ -1,11 +1,15 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 #########################Conexión a gquest.#####################################
-$quest_db = new mysqli('216.70.88.35','donquest','As$3d4%Re','quest');
-if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}
+/*$quest_db = new mysqli('216.70.88.35','donquest','As$3d4%Re','quest');
+if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}*/
 ################################################################################
 
-/*$quest_db = new mysqli('localhost','donquest','As$3d4%Re','quest');
-if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}*/
+#CONEXION DESARROLLO
+// quest
+$quest_db = new mysqli('localhost','quest_crond','s5CdZS&_','quest');
+if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}
 
 $total = 0;
 ################################################################################
@@ -46,7 +50,7 @@ if($res0->num_rows > 0){
 function _getDonde($row0){
 	$row0['idDonde'] = $row0['idDonde'] == "Survey" ? 4 : $row0['idDonde'] ;
 	$row0['donde']   = "Quest no encontro donde";
-	$res1 = $GLOBALS['gquest_db']->query("SELECT a.nombre AS donde
+	$res1 = $GLOBALS['quest_db']->query("SELECT a.nombre AS donde
                                             FROM tt_tema_donde a
                                            WHERE a.idDonde = ".$row0['idDonde']."
                                              AND a.idPais  = ".$row0['idPais'].";");
@@ -99,7 +103,7 @@ function _getRespuestas($row){
 	return $row0['total'];
 }*/
 function _setInsRespuesta($row){
-	$res0 = $GLOBALS['gquest_db']->query("INSERT INTO zz_glead_respuestas
+	$res0 = $GLOBALS['quest_db']->query("INSERT INTO zz_glead_respuestas
 													( idRespuestaEncuesta
 													, idPais
 													, idInmobiliaria
@@ -151,6 +155,6 @@ mysqli_close($quest_db);
 # ------------------------------------------------------
 #  monitor
 # ------------------------------------------------------
-$idCron = 183;
+$idCron = 183;exit;
 include('/var/www/php/crones/monitor/pro/web/monitor_cron.php');
 ?>

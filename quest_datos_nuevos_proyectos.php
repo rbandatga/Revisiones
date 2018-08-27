@@ -1,18 +1,25 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 #########################Conexión a gquest.#####################################
-$quest_db = new mysqli('216.70.88.35','donquest','As$3d4%Re','quest');
-if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}
+/*$quest_db = new mysqli('216.70.88.35','donquest','As$3d4%Re','quest');
+if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}*/
 ################################################################################
+
+#CONEXION DESARROLLO
+// quest
+$quest_db = new mysqli('localhost','quest_crond','s5CdZS&_','quest');
+if (mysqli_connect_errno()) {echo 'fallo quest_db';exit();}
 
 $total = 0;
 ################################################################################
 // Se obtienen nuevos proyectos
 $query1 = $quest_db->query("SELECT idInmobiliaria, idProyecto
-						 FROM 	proyectos_quest
-						 WHERE 	estado	  = 1
-						 AND 	nuevo 	  = 1
-						 AND 	enProceso = 0
-						 LIMIT 	1;");
+							  FROM proyectos_quest
+							 WHERE estado = 1
+							   AND nuevo = 1
+							   AND enProceso = 0
+							 LIMIT 1;");
 if(mysqli_num_rows($query1)>0){
 	$filaProy = mysqli_fetch_array($query1);
 	$idInmobiliaria = $filaProy['idInmobiliaria'];
@@ -53,7 +60,7 @@ if(mysqli_num_rows($query1)>0){
 				//$fechaPuntos = fecha_puntos($respuesta2['idEncuesta']);
 				$query3 = $quest_db->query("INSERT INTO zz_glead_respuestas (idRespuestaEncuesta, idInmobiliaria, idProyecto, idEmail_unico, Correo, idPais, idDonde, donde, idUser, fechaPuntos, X1, activo, estado)
 										SELECT * FROM  (
-											SELECT ".$respuesta2['idEncuesta']." AS idRespuestaEncuesta, $idInmobiliaria AS idInmobiliaria, $idProyecto AS idProyecto, idEmail_unico AS ".$respuesta2['idEmail_unico'].",'".$respuesta2['email']."' AS Correo,".$respuesta2['idPais']." AS idPais, ".$respuesta2['idDonde']." AS idDonde,'".$respuesta2['donde']."' AS donde, ".$respuesta2['idUser']." AS idUser, '$fechaPuntos' AS fechaPuntos, 1 AS X1, 1 AS activo,'X' AS estado
+											SELECT ".$respuesta2['idEncuesta']." AS idRespuestaEncuesta, $idInmobiliaria AS idInmobiliaria, $idProyecto AS idProyecto, ".$respuesta2['idEmail_unico']." AS idEmail_unico,'".$respuesta2['email']."' AS Correo,".$respuesta2['idPais']." AS idPais, ".$respuesta2['idDonde']." AS idDonde,'".$respuesta2['donde']."' AS donde, ".$respuesta2['idUser']." AS idUser, '$fechaPuntos' AS fechaPuntos, 1 AS X1, 1 AS activo,'X' AS estado
 										) AS tmp
 										WHERE NOT EXISTS (
 											SELECT idInmobiliaria, idProyecto, Correo, idRespuestaEncuesta FROM zz_glead_respuestas WHERE idInmobiliaria = $idInmobiliaria AND idProyecto = $idProyecto AND Correo = '".$respuesta2['email']."' AND idRespuestaEncuesta = ".$respuesta2['idEncuesta']."
@@ -75,7 +82,7 @@ if(mysqli_num_rows($query1)>0){
 function _getDonde($row0){
 	$row0['idDonde'] = $row0['idDonde'] == "Survey" ? 4 : $row0['idDonde'] ;
 	$row0['donde']   = "Quest no encontro donde";
-	$res1 = $GLOBALS['gquest_db']->query("SELECT a.nombre AS donde
+	$res1 = $GLOBALS['quest_db']->query("SELECT a.nombre AS donde
                                             FROM tt_tema_donde a
                                            WHERE a.idDonde = ".$row0['idDonde']."
                                              AND a.idPais  = ".$row0['idPais'].";");
@@ -125,6 +132,6 @@ mysqli_close($quest_db);
 # ------------------------------------------------------
 #  monitor
 # ------------------------------------------------------
-$idCron = 167;
+$idCron = 167;exit;
 include('/var/www/php/crones/monitor/pro/web/monitor_cron.php');
 ?>

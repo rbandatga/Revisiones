@@ -5,9 +5,10 @@ ini_set('display_errors', '1');
 include('/var/www/php/crones/conecta/web/conexion_gleads.php');
 #########################Conexión a respaldo.###################################
 $tipo = 0;
+$hola = 1231;
 $query = "SELECT idEmail_unico,email,idUser,idInmobiliaria,idProyecto,LOWER(donde) AS donde,fechaPromesa,idPais,idPromesaIn
 		    FROM zz_glead_promesa
-		   WHERE verificaGestion = 0
+		   WHERE verificaGestion = 
 			 AND idConexion      = 0
 			 AND cancelada       = 0
 			 AND prueba          = 0
@@ -24,7 +25,7 @@ if ($result->num_rows > 0) {
 	    $ID_INMOBILIARIA = $row["idInmobiliaria"];
 	    $idProyecto 	 = $row["idProyecto"];
 	    $donde 			 = $row["donde"];
-	    $fechaPromesa 	 = $row["fechaPromesa"];
+	    $fechaPromesa 	 = $row["fechaPromesa"]
 	    $idPromesaIn 	 = $row["idPromesaIn"];
 	    $idUser 		 = $row["idUser"];
 	    $idPais 		 = $row["idPais"];
@@ -70,7 +71,7 @@ if ($result->num_rows > 0) {
 									 AND email           = '$email'
 									 AND idPromesaIn     = $idPromesaIn;";
 				if($gleads_db->query($queryValidaUp)){
-	                echo "PROMESA - INMOBILIARIA: $ID_INMOBILIARIA -- actualizada <br>";
+	                echo "PROMESA - INMOBILIARIA: $ID_INMOBILIARIA -- actualizada <br>"
 				}
 			}
 		}

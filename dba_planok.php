@@ -1,4 +1,4 @@
-<?php
+<?php asda das das das 
 echo 'dba_planok_chile.'; #recordar envíos de cotizaciones y categorizados por cada integración
 
 $puente = new mysqli('216.70.88.35','portga','kXn@t775','puertotga',3306); 
@@ -24,7 +24,7 @@ if ($puente->connect_errno || $planok->connect_errno || $res_gleads->connect_err
 			a.idPlanOk,a.fecha,a.hora,UPPER(a.tipoCliente)AS 'tipoCliente',a.rut,a.dvRut,
 			UPPER(CONCAT(TRIM(a.nombre),' ',TRIM(a.apellidoPaterno),' ',TRIM(a.apellidoMaterno)))AS 'nombre',
 			UPPER(a.sexo)AS 'sexo',UPPER(a.comunaCliente)AS 'comuna',
-			CONCAT(TRIM(a.fonoCliente),' ',TRIM(a.celularCliente))AS 'fono',
+			CONCAT(TRIM(a.fonoCliente),' ',TRIM(a.celularCliente))AS 'fono',asdas
 			LOWER(a.emailCliente)AS 'email',
 			LOWER(TRIM(a.tipoCotizacion))AS 'tipoCotizacion',LOWER(TRIM(a.medioLlegada))AS 'medioLlegada',
 			LOWER(TRIM(a.tipoContacto))AS 'tipoContacto',a.producto,a.modelo,a.programa,
@@ -39,7 +39,7 @@ if ($puente->connect_errno || $planok->connect_errno || $res_gleads->connect_err
 				AND a.etapa = b.Pok_etapa
 				AND a.subagrupacion = b.Pok_subagrupacion
 				AND b.estado = 1
-			LEFT JOIN vendedores AS c
+			LEFT JOIN vendedores AS casdas
 				ON  c.Pok_rut = a.rutVendedor
 				AND c.Pok_idInmobiliaria =a.idInmobiliaria
 		WHERE(a.traspaso = 0	
@@ -55,7 +55,7 @@ if ($puente->connect_errno || $planok->connect_errno || $res_gleads->connect_err
 			AND b.Tga_idInmobiliaria >0
 			AND a.fecha > DATE_SUB(NOW(),INTERVAL 7 DAY)
 			AND a.medioLlegada ='COTIZADOR WEB POK'
-		)
+		)asdasd
 		ORDER BY a.idPlanOk ASC
 		LIMIT 50;
 	");
